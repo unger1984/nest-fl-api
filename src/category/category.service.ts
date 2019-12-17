@@ -2,14 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 
 import Category from './category.entity';
 import CategoryDto from './category.dto';
-import Project from '../project/project.entity';
 
 @Injectable()
 export class CategoryService {
-	constructor(
-		@Inject('CategoryRepository') private readonly categoryRepository: typeof Category,
-		@Inject('ProjectRepository') private readonly projectRepository: typeof Project,
-	) {}
+	constructor(@Inject('CategoryRepository') private readonly categoryRepository: typeof Category) {}
 
 	async findAll(parentId?: number): Promise<Category[]> {
 		try {
@@ -21,7 +17,6 @@ export class CategoryService {
 						as: 'child',
 						include: [{ model: this.categoryRepository, as: 'child' }],
 					},
-					{ model: this.projectRepository, as: 'projects' },
 				],
 			});
 			return categoryes;

@@ -1,9 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Umzug from 'umzug';
 
 @Injectable()
-export class AppService {
+export class AppService implements OnApplicationBootstrap {
 	private umzug;
 
 	constructor(private configService: ConfigService, @Inject('Sequelize') private readonly sequelize) {
@@ -24,6 +24,10 @@ export class AppService {
 				],
 			},
 		});
+	}
+
+	onApplicationBootstrap(): any {
+		this.migrate();
 	}
 
 	async migrate() {
