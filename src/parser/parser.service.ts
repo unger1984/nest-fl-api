@@ -40,7 +40,7 @@ export class ParserService implements OnApplicationBootstrap, OnApplicationShutd
 				this.proxyList = await this.getProxy();
 			}
 			if (this.proxyList.length > 0) {
-				if (!this.usedProxy || this.skipCounter > 10) {
+				if (!this.usedProxy || this.skipCounter >= 10) {
 					this.usedProxy = this.proxyList.pop();
 					args.push(`--proxy-server=${this.usedProxy}`);
 				} else if (this.usedProxy) {
@@ -63,13 +63,13 @@ export class ParserService implements OnApplicationBootstrap, OnApplicationShutd
 		try {
 			browser = await puppeteer.launch({ args: args });
 			page = await browser.newPage();
-			await page.setViewport({ width: 1280, height: 920 });
+			await page.setViewport({ width: 1920, height: 1080 });
 			await page.setExtraHTTPHeaders({
 				'Upgrade-Insecure-Requests': '1',
 				Referer: 'https://www.fl.ru/projects/?kind=1',
 			});
 			await page.setUserAgent(
-				'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36',
+				'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36',
 			);
 			await page.goto('https://www.fl.ru/projects/?kind=1');
 			const hideButton = await page.$('#hide_top_project_lnk');
@@ -170,11 +170,16 @@ export class ParserService implements OnApplicationBootstrap, OnApplicationShutd
 				} catch (err) {
 					if (err.name && err.name === 'SequelizeUniqueConstraintError') {
 						// eslint-disable-next-line no-console
-						console.error('BREAK');
+						console.error('BREAK SQL', this.skipCounter);
+						break;
+					} else if (err.name && err.name === 'TimeoutError') {
+						// eslint-disable-next-line no-console
+						console.error('BREAK TIMEOUT', this.skipCounter);
 						break;
 					}
 					// eslint-disable-next-line no-console
 					console.error(err.toString(), err);
+					break;
 				}
 			}
 		}
@@ -183,6 +188,8 @@ export class ParserService implements OnApplicationBootstrap, OnApplicationShutd
 		}
 		if (projectCounter <= 0) {
 			this.skipCounter++;
+		} else {
+			this.skipCounter = 0;
 		}
 
 		// удалим все старое
@@ -223,13 +230,13 @@ export class ParserService implements OnApplicationBootstrap, OnApplicationShutd
 		try {
 			browser = await puppeteer.launch({ args: ['--no-sandbox'] });
 			page = await browser.newPage();
-			await page.setViewport({ width: 1280, height: 920 });
+			await page.setViewport({ width: 1920, height: 1080 });
 			await page.setExtraHTTPHeaders({
 				'Upgrade-Insecure-Requests': '1',
 				Referer: 'https://hidemyna.me/',
 			});
 			await page.setUserAgent(
-				'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36',
+				'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36',
 			);
 			await page.goto('https://hidemyna.me/ru/proxy-list/?maxtime=700&type=s#list');
 			// await page.screenshot({path: '/tmp/test.png'});
@@ -259,10 +266,12 @@ export class ParserService implements OnApplicationBootstrap, OnApplicationShutd
 			// eslint-disable-next-line no-console
 			console.error(err);
 			throw err;
+		} finally {
+			if (browser) {
+				await browser.close();
+			}
 		}
-		if (browser) {
-			await browser.close();
-		}
+
 		return res;
 	}
 }
