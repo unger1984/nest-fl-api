@@ -19,7 +19,7 @@ export class ProjectService {
 			if (categoryes.length > 0) {
 				where.categoryId = categoryes;
 			}
-			const projects = await this.projectRepository.findAll({
+			const projects = await this.projectRepository.findAndCountAll({
 				where,
 				include: [
 					{
