@@ -25,6 +25,8 @@ async function bootstrap() {
 		httpsOptions,
 	});
 	const configService: ConfigService = app.get(ConfigService);
+	app.enableShutdownHooks();
+	app.enableCors();
 	app.setGlobalPrefix('/api');
 	app.use(bodyParser.urlencoded({ extended: true }));
 	app.use(bodyParser.json({ limit: '1mb' }));

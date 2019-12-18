@@ -1,25 +1,29 @@
 import { Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
+
 import { CategoryService } from './category.service';
 import CategoryDto from './category.dto';
-import Category from './category.entity';
+import { ApiResponse } from '../apiresponse/apiresponse.service';
 
 @Controller('category')
 export class CategoryController {
-	constructor(private readonly categoryService: CategoryService) {}
+	constructor(private readonly categoryService: CategoryService, private readonly apiResponse: ApiResponse) {}
 
 	@Get()
-	async get(@Query('parentId') parentId?: number): Promise<Category[]> {
-		return await this.categoryService.findAll(parentId ? parentId : null);
+	async get(@Query('parentId') parentId?: number): Promise<ApiResponse> {
+		await this.categoryService.findAll(parentId ? parentId : null)
+		return this.apiResponse;
 	}
 
 	@Get(':id')
-	async findOne(@Param('id') id): Promise<Category> {
-		return await this.categoryService.findOne(id);
+	async findOne(@Param('id') id): Promise<ApiResponse> {
+		await this.categoryService.findOne(id)
+		return this.apiResponse;
 	}
 
 	@Put()
-	async create(@Body() category: CategoryDto): Promise<Category> {
-		return await this.categoryService.create(category);
+	async create(@Body() category: CategoryDto): Promise<ApiResponse> {
+		await this.categoryService.create(category)
+		return this.apiResponse;
 	}
 
 	// @Post('test')

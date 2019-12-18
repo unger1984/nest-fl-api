@@ -2,12 +2,16 @@ import { Inject, Injectable } from '@nestjs/common';
 
 import Category from './category.entity';
 import CategoryDto from './category.dto';
+import { ApiResponse } from '../apiresponse/apiresponse.service';
 
 @Injectable()
 export class CategoryService {
-	constructor(@Inject('CategoryRepository') private readonly categoryRepository: typeof Category) {}
+	constructor(
+		@Inject('CategoryRepository') private readonly categoryRepository: typeof Category,
+		private readonly apiResponse: ApiResponse,
+	) {}
 
-	async findAll(parentId?: number): Promise<Category[]> {
+	async findAll(parentId?: number): Promise<void> {
 		try {
 			const categoryes = await this.categoryRepository.findAll({
 				where: { parentId: parentId },
@@ -19,31 +23,34 @@ export class CategoryService {
 					},
 				],
 			});
-			return categoryes;
+			this.apiResponse.create(categoryes);
 		} catch (exc) {
-			return [];
+			// TODO обработать ошибку
+			this.apiResponse.create([]);
 		}
 	}
 
-	async findOne(id: number): Promise<Category> {
+	async findOne(id: number): Promise<void> {
 		try {
 			const category = await this.categoryRepository.findOne({
 				where: { id: id },
 				include: [{ model: this.categoryRepository, as: 'child', include: [{ model: Category, as: 'child' }] }],
 			});
-			return category;
+			this.apiResponse.create(category);
 		} catch (exc) {
-			return null;
+			// TODO обработать ошибку
+			this.apiResponse.create(null);
 		}
 	}
 
-	async create(category: CategoryDto): Promise<Category> {
+	async create(category: CategoryDto): Promise<void> {
 		try {
 			const res = await this.categoryRepository.create(category);
 			await res.save();
-			return res;
+			this.apiResponse.create(res);
 		} catch (exc) {
-			return null;
+			// TODO обработать ошибку
+			this.apiResponse.create(null);
 		}
 	}
 }

@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnApplicationBootstrap } from '@nestjs/common';
+import { Inject, Injectable, OnApplicationBootstrap, OnApplicationShutdown } from '@nestjs/common';
 import puppeteer from 'puppeteer';
 import moment from 'moment';
 import { Op } from 'sequelize';
@@ -9,10 +9,11 @@ import { ProjectDto } from '../project/project.dto';
 import { flStrip, fltoDate } from '../utils';
 
 @Injectable()
-export class ParserService implements OnApplicationBootstrap {
+export class ParserService implements OnApplicationBootstrap, OnApplicationShutdown {
 	private proxyList: string[] = [];
 	private usedProxy: string | null | undefined = null;
 	private skipCounter = 0;
+	private timerIdle = null;
 
 	constructor(
 		@Inject('Sequelize') private readonly sequelize,
@@ -21,7 +22,15 @@ export class ParserService implements OnApplicationBootstrap {
 	) {}
 
 	onApplicationBootstrap() {
-		setTimeout(() => this.parse(), 15 * 1000);
+		this.timerIdle = setTimeout(async () => await this.parse(), 15 * 1000);
+	}
+
+	onApplicationShutdown(signal?: string) {
+		// eslint-disable-next-line no-console
+		console.log('Shutdown', signal);
+		if (this.timerIdle) {
+			clearTimeout(this.timerIdle);
+		}
 	}
 
 	private async parse() {
@@ -78,7 +87,8 @@ export class ParserService implements OnApplicationBootstrap {
 			if (browser) {
 				await browser.close();
 			}
-			setTimeout(() => this.parse(), 1000);
+			this.timerIdle = setTimeout(async () => await this.parse(), 1000);
+			return;
 		}
 
 		let projectCounter = 0;
@@ -181,7 +191,7 @@ export class ParserService implements OnApplicationBootstrap {
 		const __ms = Date.now() - __start;
 		// eslint-disable-next-line no-console
 		console.log(`Time work - ${__ms}ms`);
-		setTimeout(() => this.parse(), 15 * 1000);
+		this.timerIdle = setTimeout(async () => await this.parse(), 15 * 1000);
 	}
 
 	private async saveCategoryes(categoryes: string[]): Promise<Category | null> {
