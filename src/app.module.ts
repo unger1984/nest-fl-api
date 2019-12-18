@@ -7,7 +7,6 @@ import { ProjectModule } from './project/project.module';
 import { CategoryModule } from './category/category.module';
 import { UserModule } from './user/user.module';
 import { AppService } from './app.service';
-import { ParserModule } from './parser/parser.module';
 
 @Module({
 	imports: [
@@ -16,7 +15,6 @@ import { ParserModule } from './parser/parser.module';
 		ProjectModule,
 		CategoryModule,
 		UserModule,
-		ParserModule,
 	],
 	providers: [AppService],
 })
